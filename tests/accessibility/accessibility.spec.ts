@@ -2,10 +2,10 @@ import { test } from "@playwright/test";
 import { DataRoomPage } from "../../src/pages/DataRoomPage";
 
 test.describe("Brislane data room accessibility", () => {
-  test("homepage passes axe-core WCAG 2.1 A/AA checks", async ({ page }) => {
+  test("homepage has no axe-core WCAG 2.1 A/AA violations", async ({ page }, testInfo) => {
     const dataRoom = new DataRoomPage(page);
     await dataRoom.open();
-    await dataRoom.runWcagAudit();
+    await dataRoom.runWcagAudit(testInfo);
   });
 
   test("homepage supports keyboard focus", async ({ page }) => {
@@ -14,27 +14,26 @@ test.describe("Brislane data room accessibility", () => {
     await dataRoom.expectKeyboardFocusAvailable();
   });
 
-  test("images have alternative text", async ({ page }) => {
+  test("images expose an alt attribute", async ({ page }) => {
     const dataRoom = new DataRoomPage(page);
     await dataRoom.open();
     await dataRoom.expectAllImagesHaveAltText();
   });
 
-  test("homepage has a single level-one heading", async ({ page }) => {
+  test("homepage contains a level-one heading", async ({ page }) => {
     const dataRoom = new DataRoomPage(page);
     await dataRoom.open();
     await dataRoom.expectHeadingStructure();
   });
 
-  test("desktop viewport renders", async ({ page }) => {
-    await new DataRoomPage(page).setViewportAndExpectTitle(1280, 720);
-  });
-
-  test("tablet viewport renders", async ({ page }) => {
-    await new DataRoomPage(page).setViewportAndExpectTitle(768, 1024);
-  });
-
-  test("mobile viewport renders", async ({ page }) => {
-    await new DataRoomPage(page).setViewportAndExpectTitle(375, 812);
+  test("responsive layout renders without horizontal overflow at target breakpoints", async ({ page }) => {
+    const dataRoom = new DataRoomPage(page);
+    for (const viewport of [
+      { width: 1280, height: 720 },
+      { width: 768, height: 1024 },
+      { width: 375, height: 812 },
+    ]) {
+      await dataRoom.setViewportAndExpectTitle(viewport.width, viewport.height);
+    }
   });
 });
