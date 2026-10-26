@@ -2,6 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 import { environment } from "./config/environments";
 
 const ci = Boolean(process.env.CI);
+const target = environment.name;
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
@@ -20,9 +22,9 @@ export default defineConfig({
     navigationTimeout: 15_000,
   },
   projects: [
-    { name: "api-chromium", testDir: "./tests/api", use: { ...devices["Desktop Chrome"] } },
-    { name: "chromium", testDir: "./tests", testIgnore: "**/api/**", use: { ...devices["Desktop Chrome"] } },
-    { name: "firefox", testDir: "./tests", testIgnore: "**/api/**", use: { ...devices["Desktop Firefox"] } },
-    { name: "webkit", testDir: "./tests", testIgnore: "**/api/**", use: { ...devices["Desktop Safari"] } },
+    { name: `${target}-api-chromium`, testDir: "./tests/api", use: { ...devices["Desktop Chrome"] } },
+    { name: `${target}-chromium`, testDir: "./tests", testIgnore: "**/api/**", use: { ...devices["Desktop Chrome"] } },
+    { name: `${target}-firefox`, testDir: "./tests", testIgnore: "**/api/**", use: { ...devices["Desktop Firefox"] } },
+    { name: `${target}-webkit`, testDir: "./tests", testIgnore: "**/api/**", use: { ...devices["Desktop Safari"] } },
   ],
 });
