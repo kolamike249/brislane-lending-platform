@@ -3,6 +3,16 @@ import { environment } from "./config/environments";
 
 const ci = Boolean(process.env.CI);
 const target = environment.name;
+const viewports = [
+  { key: "desktop", width: 1280, height: 720 },
+  { key: "tablet", width: 768, height: 1024 },
+  { key: "mobile", width: 375, height: 812 },
+] as const;
+const browsers = [
+  { key: "chromium", device: devices["Desktop Chrome"] },
+  { key: "firefox", device: devices["Desktop Firefox"] },
+  { key: "webkit", device: devices["Desktop Safari"] },
+] as const;
 
 export default defineConfig({
   testDir: "./tests",
@@ -23,8 +33,11 @@ export default defineConfig({
   },
   projects: [
     { name: `${target}-api-chromium`, testDir: "./tests/api", use: { ...devices["Desktop Chrome"] } },
-    { name: `${target}-chromium`, testDir: "./tests", testIgnore: "**/api/**", use: { ...devices["Desktop Chrome"] } },
-    { name: `${target}-firefox`, testDir: "./tests", testIgnore: "**/api/**", use: { ...devices["Desktop Firefox"] } },
-    { name: `${target}-webkit`, testDir: "./tests", testIgnore: "**/api/**", use: { ...devices["Desktop Safari"] } },
+    ...browsers.flatMap(({ key, device }) => viewports.map(({ key: viewport, width, height }) => ({
+      name: `${target}-${key}-${viewport}`,
+      testDir: "./tests",
+      testIgnore: "**/api/**",
+      use: { ...device, viewport: { width, height } },
+    }))),
   ],
 });
