@@ -232,56 +232,18 @@ The framework refactor is prepared on `feature/playwright-framework-refactor`.
 
 ### Phase 7 — Automation Engineering
 
-**Run your API tests:**
+**Run the API journey tests:**
 ```bash
-# Run just the API loan journey tests
-npx playwright test --project=api-chromium
-
-# Run just accessibility tests
-npx playwright test --project=accessibility-chromium
-
-# Run both
-npx playwright test --project=api-chromium --project=accessibility-chromium
+npx playwright test --project=qa-api-chromium
 ```
+Replace `qa` with the selected `TEST_ENV` prefix (`dev`, `qa`, or `uat`). Browser UI suites are named `<environment>-chromium`, `<environment>-firefox`, and `<environment>-webkit`.
 
-**Phase 7 task — uncomment cross-browser projects in playwright.config.ts then run:**
-```bash
-# After uncommenting firefox/webkit projects
-npx playwright test --project=api-chromium --project=api-firefox --project=api-webkit
-```
-
-**View your HTML report:**
+**View the HTML report:**
 ```bash
 npx playwright show-report
 ```
 
-> ⚠️ Do NOT run `npx playwright test` without specifying a project — it will also run the intentionally broken inherited tests which hit a non-existent URL.
-
-**What to automate:**
-Use Playwright's API testing capabilities to automate the loan journey against the mock API:
-```typescript
-const response = await request.post(`${process.env.BASE_URL}/loans/applications`, {
-  headers: { Authorization: `Bearer ${token}` },
-  data: { customer_id: 'C1TEST001', loan_amount: 5000, loan_term_months: 24 }
-});
-```
-
-**For accessibility testing** — run axe-core against the data room:
-```typescript
-await page.goto('https://alain-sortnext.github.io/brislane-lending-platform/');
-await injectAxe(page);
-await checkA11y(page);
-```
-
-**Cross-browser and viewport** — configure in `playwright.config.ts`:
-```typescript
-projects: [
-  { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-  { name: 'firefox',  use: { ...devices['Desktop Firefox'] } },
-  { name: 'webkit',   use: { ...devices['Desktop Safari'] } },
-  { name: 'mobile',   use: { ...devices['Pixel 5'] } },
-]
-```
+Run only against authorised non-production targets with synthetic data. The login contract and selectors must be verified before interpreting an E2E run as certification evidence.
 
 ---
 
