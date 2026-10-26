@@ -8,6 +8,7 @@ type WorkerFixtures = { authSession: AuthSession; authToken: string };
 type TestFixtures = { authenticatedRequest: APIRequestContext };
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
+  // One API login per worker; every test in that worker reuses this auth session.
   authSession: [async ({ playwright }, use) => {
     const api = await playwright.request.newContext({ baseURL: environment.apiBaseURL });
     try {
@@ -48,17 +49,21 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     try { await use(api); } finally { await api.dispose(); }
   },
   context: async ({ browser, authSession }, use) => {
-    const context: BrowserContext = await browser.newContext({ baseURL: environment.baseURL });
+    const origin = new URL(environment.baseURL).origin;
+    const localStorage = environment.tokenStorage === "localStorage" && authSession.token
+      ? [{ name: environment.tokenStorageKey, value: authSession.token }]
+      : [];
+    const context: BrowserContext = await browser.newContext({
+      baseURL: environment.baseURL,
+      // Playwright storageState primes cookies and localStorage before each page is created.
+      storageState: { cookies: authSession.cookies, origins: localStorage.length ? [{ origin, localStorage }] : [] },
+    });
     if (environment.tokenStorage === "cookie") {
       await context.addCookies(authSession.cookies);
-    } else {
+    } else if (environment.tokenStorage === "sessionStorage") {
       const token = authSession.token!;
-      const storage = environment.tokenStorage;
       const key = environment.tokenStorageKey;
-      await context.addInitScript(({ storage, key, token }) => {
-        const target = storage === "sessionStorage" ? window.sessionStorage : window.localStorage;
-        target.setItem(key, token);
-      }, { storage, key, token });
+      await context.addInitScript(({ key, token }) => window.sessionStorage.setItem(key, token), { key, token });
     }
     await use(context);
     await context.close();
